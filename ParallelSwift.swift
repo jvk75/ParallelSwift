@@ -10,7 +10,7 @@
 
 import Foundation
 
-class ParallelSwift {
+public class ParallelSwift {
     private var phases: [( @escaping () -> () ) -> ()] = []
     private let barrier = DispatchQueue(label: "jk.parallelSwift.fi", attributes: .concurrent)
     
