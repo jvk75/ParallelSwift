@@ -4,13 +4,15 @@
 //  Created by Jari Kalinainen on 29.01.18.
 //  Copyright © 2018 Jari Kalinainen. All rights reserved.
 //
-// https://github.com/jvk75/ParallelSwift
+//  MIT Licensed
+//  
+//  https://github.com/jvk75/ParallelSwift
 
 import Foundation
 
 class ParallelSwift {
-    private var phases: [(@escaping () -> ()) -> ()] = []
-    private let barrier = DispatchQueue(label: "jk.paralleSwift.fi", attributes: .concurrent)
+    private var phases: [( @escaping () -> () ) -> ()] = []
+    private let barrier = DispatchQueue(label: "jk.parallelSwift.fi", attributes: .concurrent)
     
     private var numberOfPhases: Int = 0
     
