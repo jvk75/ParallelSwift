@@ -35,8 +35,10 @@ class ParallelSwift {
     private func done() -> () {
         numberOfPhases -= 1
         if numberOfPhases == 0 {
-            complete?()
-            reset()
+            DispatchQueue.main.async {
+                self.complete?()
+                self.reset()
+            }
         }
     }
     
