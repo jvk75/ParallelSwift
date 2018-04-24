@@ -12,7 +12,7 @@ import Foundation
 
 public class ParallelSwift {
 
-    enum ExecutionType {
+    public enum ExecutionType {
         case all
         case any
         case none
