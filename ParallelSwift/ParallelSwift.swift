@@ -11,9 +11,18 @@
 import Foundation
 
 public class ParallelSwift {
+
+    enum ExecutionType {
+        case all
+        case any
+        case none
+    }
+
     private var phases: [( @escaping () -> () ) -> ()] = []
-    private let barrier = DispatchQueue(label: "jk.parallelSwift.fi", attributes: .concurrent)
-    
+    private let barrier = DispatchQueue(label: "com.klubitii.parallelSwift", attributes: .concurrent)
+
+    private var executionType: ExecutionType = .all
+
     private var numberOfPhases: Int = 0
     
     private var complete: (() -> ())?
@@ -22,19 +31,39 @@ public class ParallelSwift {
         phases.append(phase)
     }
     
-    public func execute(_ complete: @escaping () -> ()) {
+    public func execute(_ type: ExecutionType = .all,  complete: @escaping () -> ()) {
         self.numberOfPhases = phases.count
         self.complete = complete
+        self.executionType = type
+
         self.phases.forEach({ phase in
             self.barrier.sync(flags: .barrier) {
                 phase(done)
             }
         })
+        if executionType == .none {
+            done()
+        }
     }
     
     private func done() -> () {
+        guard complete != nil else {
+            return
+        }
         numberOfPhases -= 1
-        if numberOfPhases == 0 {
+
+        var executionDone = false
+
+        switch executionType {
+        case .none:
+            executionDone = true
+        case .any:
+            executionDone = true
+        default:
+            break
+        }
+
+        if numberOfPhases == 0 || executionDone {
             DispatchQueue.main.async {
                 self.complete?()
                 self.reset()
@@ -46,5 +75,6 @@ public class ParallelSwift {
         phases = []
         numberOfPhases = 0
         complete = nil
+        executionType = .all
     }
 }
