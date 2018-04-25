@@ -13,13 +13,19 @@ import Foundation
 public class ParallelSwift {
 
     public enum ExecutionType {
+        /// Execution closure is executed after all phase closures are finnished.
         case all
+        /// Execution closure is executed after first phase closure is finnished.
         case any
+        /// Execution closure is executed immediately after phases are started.
         case none
     }
 
+    /// Timeout which after execute closeure is called no matter what.
+    public var timeout: TimeInterval = 0
+    
     private var phases: [( @escaping () -> () ) -> ()] = []
-    private let barrier = DispatchQueue(label: "com.klubitii.parallelSwift", attributes: .concurrent)
+    private var barrier: DispatchQueue?
 
     private var executionType: ExecutionType = .all
 
@@ -27,22 +33,38 @@ public class ParallelSwift {
     
     private var complete: (() -> ())?
     
+    /// Add execution phase as closure. Once input closure is called phase in considered finnished.
     public func addPhase(_ phase: @escaping ( @escaping () -> () ) -> ())  {
         phases.append(phase)
     }
     
+    /// Start all phases in parallel. ExecutionMode defines when completion is called (see documentation)
     public func execute(_ type: ExecutionType = .all,  complete: @escaping () -> ()) {
         self.numberOfPhases = phases.count
         self.complete = complete
         self.executionType = type
-
+        
+        barrier = DispatchQueue(label: "com.klubitii.parallelSwift.\(type).\(timeout)", attributes: .concurrent)
+        
         self.phases.forEach({ phase in
-            self.barrier.sync(flags: .barrier) {
+            barrier?.sync(flags: .barrier) {
                 phase(done)
             }
         })
         if executionType == .none {
             done()
+        }
+        startTimer()
+    }
+    
+    private func startTimer() {
+        guard timeout > 0 else {
+            return
+        }
+        DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + timeout) {
+            self.barrier?.suspend()
+            self.complete?()
+            self.reset()
         }
     }
     

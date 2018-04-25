@@ -10,28 +10,30 @@ import XCTest
 
 class ParallelTests: XCTestCase {
     
-    let p = ParallelSwift()
+    var p: ParallelSwift?
     
     var result = ""
 
     override func setUp() {
         super.setUp()
+        p = ParallelSwift()
         result = ""
-        p.addPhase { done in
+        p?.timeout = 0
+        p?.addPhase { done in
             DispatchQueue.global().asyncAfter(deadline: DispatchTime.now() + 1){
                 print("1")
                 self.result.append("1")
                 done()
             }
         }
-        p.addPhase { done in
+        p?.addPhase { done in
             DispatchQueue.global().asyncAfter(deadline: DispatchTime.now() + 2){
                 print("2")
                 self.result.append("2")
                 done()
             }
         }
-        p.addPhase { done in
+        p?.addPhase { done in
             DispatchQueue.global().asyncAfter(deadline: DispatchTime.now() + 3){
                 print("3")
                 self.result.append("3")
@@ -43,13 +45,47 @@ class ParallelTests: XCTestCase {
     override func tearDown() {
         // Put teardown code here. This method is called after the invocation of each test method in the class.
         super.tearDown()
+        p = nil
     }
     
+
+    func testTimeoutAll() {
+        
+        let e = expectation(description: "time")
+        var timeResult = ""
+
+        p?.timeout = 5
+        p?.addPhase { done in
+            DispatchQueue.global().asyncAfter(deadline: DispatchTime.now() + 4){
+                print("4")
+                timeResult.append("4")
+                done()
+            }
+        }
+        p?.addPhase { done in
+            DispatchQueue.global().asyncAfter(deadline: DispatchTime.now() + 10){
+                print("5")
+                timeResult.append("5")
+                done()
+            }
+        }
+        
+        p?.execute(.all) {
+            XCTAssert(timeResult == "4")
+            e.fulfill()
+            print("all done")
+        }
+        
+        waitForExpectations(timeout: 6, handler: { _ in
+            print("Test done")
+        })
+    }
+
     func testModeAll() {
 
         let e = expectation(description: "all")
 
-        p.execute(.all) {
+        p?.execute(.all) {
             XCTAssert(self.result == "123")
             e.fulfill()
             print("all done")
@@ -64,7 +100,7 @@ class ParallelTests: XCTestCase {
         
         let e = expectation(description: "any")
         
-        p.execute(.any) {
+        p?.execute(.any) {
             XCTAssert(self.result == "1")
             e.fulfill()
             print("all done")
@@ -79,7 +115,7 @@ class ParallelTests: XCTestCase {
         
         let e = expectation(description: "none")
         
-        p.execute(.none) {
+        p?.execute(.none) {
             XCTAssert(self.result == "")
             e.fulfill()
             print("all done")
@@ -89,5 +125,5 @@ class ParallelTests: XCTestCase {
             print("Test done")
         })
     }
-
+    
 }
