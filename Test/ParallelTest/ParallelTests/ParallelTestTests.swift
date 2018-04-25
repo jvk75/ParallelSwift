@@ -16,6 +16,15 @@ class ParallelTests: XCTestCase {
 
     override func setUp() {
         super.setUp()
+    }
+    
+    override func tearDown() {
+        // Put teardown code here. This method is called after the invocation of each test method in the class.
+        super.tearDown()
+        p = nil
+    }
+    
+    func doPhases() {
         p = ParallelSwift()
         result = ""
         p?.timeout = 0
@@ -42,16 +51,11 @@ class ParallelTests: XCTestCase {
         }
     }
     
-    override func tearDown() {
-        // Put teardown code here. This method is called after the invocation of each test method in the class.
-        super.tearDown()
-        p = nil
-    }
-    
-
     func testTimeoutAll() {
         
         let e = expectation(description: "time")
+        doPhases()
+
         var timeResult = ""
 
         p?.timeout = 5
@@ -84,7 +88,10 @@ class ParallelTests: XCTestCase {
     func testModeAll() {
 
         let e = expectation(description: "all")
-
+        doPhases()
+        
+        p?.sufflePhases = true
+        
         p?.execute(.all) {
             XCTAssert(self.result == "123")
             e.fulfill()
@@ -99,7 +106,8 @@ class ParallelTests: XCTestCase {
     func testModeAny() {
         
         let e = expectation(description: "any")
-        
+        doPhases()
+
         p?.execute(.any) {
             XCTAssert(self.result == "1")
             e.fulfill()
@@ -114,7 +122,8 @@ class ParallelTests: XCTestCase {
     func testModeNone() {
         
         let e = expectation(description: "none")
-        
+        doPhases()
+
         p?.execute(.none) {
             XCTAssert(self.result == "")
             e.fulfill()
@@ -126,4 +135,62 @@ class ParallelTests: XCTestCase {
         })
     }
     
+    func testMultiParallel() {
+        
+        let e = expectation(description: "multi")
+        
+        p = ParallelSwift()
+        var multiResult = ""
+        var singleResult = ""
+
+        p?.timeout = 0
+        p?.addPhase { done in
+            let pp = ParallelSwift()
+            pp.addPhase { done in
+                DispatchQueue.global().asyncAfter(deadline: DispatchTime.now() + 1){
+                    print("11")
+                    multiResult.append("11")
+                    done()
+                }
+            }
+            pp.addPhase { done in
+                DispatchQueue.global().asyncAfter(deadline: DispatchTime.now() + 2){
+                    print("12")
+                    multiResult.append("12")
+                    done()
+                }
+            }
+            pp.execute(.all) {
+                XCTAssert(multiResult == "1112")
+                print("+")
+                singleResult.append("+")
+                done()
+            }
+        }
+        p?.addPhase { done in
+            DispatchQueue.global().asyncAfter(deadline: DispatchTime.now() + 1.5){
+                print("*")
+                singleResult.append("*")
+                done()
+            }
+        }
+        p?.addPhase { done in
+            DispatchQueue.global().asyncAfter(deadline: DispatchTime.now() + 1.5){
+                print("-")
+                singleResult.append("-")
+                done()
+            }
+        }
+
+        p?.execute(.all) {
+            XCTAssert(singleResult == "*-+")
+            e.fulfill()
+            print("all done")
+        }
+        
+        waitForExpectations(timeout: 10, handler: { _ in
+            print("Test done")
+        })
+    }
+
 }

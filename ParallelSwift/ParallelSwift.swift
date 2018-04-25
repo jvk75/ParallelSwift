@@ -24,13 +24,14 @@ public class ParallelSwift {
     /// Timeout which after execute closeure is called no matter what.
     public var timeout: TimeInterval = 0
     
-    private var phases: [( @escaping () -> () ) -> ()] = []
-    private var barrier: DispatchQueue?
-
-    private var executionType: ExecutionType = .all
-
-    private var numberOfPhases: Int = 0
+    /// Randomize the order which phases are put to operation queue
+    public var sufflePhases: Bool = false
     
+    private var phases: [( @escaping () -> () ) -> ()] = []
+    private let queue = OperationQueue()
+    private let dpQueue = DispatchQueue(label: "com.klubitii.parallelSwift", attributes: .concurrent)
+    private var executionType: ExecutionType = .all
+    private var numberOfPhases: Int = 0
     private var complete: (() -> ())?
     
     /// Add execution phase as closure. Once input closure is called phase in considered finnished.
@@ -44,27 +45,31 @@ public class ParallelSwift {
         self.complete = complete
         self.executionType = type
         
-        barrier = DispatchQueue(label: "com.klubitii.parallelSwift.\(type).\(timeout)", attributes: .concurrent)
+        queue.maxConcurrentOperationCount = numberOfPhases + 1 
+        queue.underlyingQueue = dpQueue
+        
+        if sufflePhases {
+            self.phases.shuffle()
+        }
         
         self.phases.forEach({ phase in
-            barrier?.sync(flags: .barrier) {
-                phase(done)
+            queue.addOperation {
+                phase(self.done)
             }
         })
         if executionType == .none {
-            done()
+            self.done()
         }
-        startTimer()
+        self.startTimer()
     }
     
     private func startTimer() {
         guard timeout > 0 else {
             return
         }
-        DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + timeout) {
-            self.barrier?.suspend()
-            self.complete?()
-            self.reset()
+        dpQueue.asyncAfter(deadline: DispatchTime.now() + timeout) {
+            self.queue.cancelAllOperations()
+            self.allDone()
         }
     }
     
@@ -86,10 +91,14 @@ public class ParallelSwift {
         }
 
         if numberOfPhases == 0 || executionDone {
-            DispatchQueue.main.async {
-                self.complete?()
-                self.reset()
-            }
+            self.allDone()
+        }
+    }
+    
+    private func allDone() {
+        DispatchQueue.main.async {
+            self.complete?()
+            self.reset()
         }
     }
     
@@ -98,5 +107,15 @@ public class ParallelSwift {
         numberOfPhases = 0
         complete = nil
         executionType = .all
+    }
+}
+
+extension Array {
+    mutating func shuffle() {
+        if count < 2 { return }
+        for i in 0..<(count - 1) {
+            let j = Int(arc4random_uniform(UInt32(count - i))) + i
+            self.swapAt(i, j)
+        }
     }
 }
