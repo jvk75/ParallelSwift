@@ -4,6 +4,17 @@ Wrapper to simplify parallel execution of methods. With three different excution
 Plus optional timeout to prevent locking app, and possibility to shuffle queue order.
 Made purely in Swift. See Test folder for usege examples.
 
+## Install
+UIImageCropper is available through [CocoaPods](http://cocoapods.org). To install
+it, simply add the following line to your Podfile:
+
+```
+pod 'ParallelSwift'
+```
+
+(or add ParallelSwift folder to your project)
+
+
 ## Modes
 ### All
 Execution closure is executed after all phase closures are finnished.
