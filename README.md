@@ -1,5 +1,8 @@
 # ParallelSwift
-Wrapper to simplify parallel execution of methods. With three different excution modes and optional timeout to prevent locking app.
+
+Wrapper to simplify parallel execution of methods. With three different excution modes. 
+Plus optional timeout to prevent locking app, and possibility to shuffle queue order.
+Made purely in Swift. See Test folder for usege examples.
 
 ## Modes
 ### All
