@@ -46,6 +46,13 @@ Execution completion closure is always executed in main thread. See modes.
         print("all done")
     }
 ```
+
+### Parameters
+
+```timeout``` : Time in seconds after which execute completion is called even if phases are still running. *Default: 0 (no timeout)*
+
+```shufflePhases```: If true the order which phases are put to operation queue is randomized. *Default: false*
+
 ## Issues and contribution
 
 If you find any issues please open an issue to this repository.
