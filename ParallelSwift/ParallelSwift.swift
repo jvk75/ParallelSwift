@@ -33,7 +33,9 @@ public class ParallelSwift {
     private var executionType: ExecutionType = .all
     private var numberOfPhases: Int = 0
     private var complete: (() -> ())?
-    
+
+    public init() {}
+
     /// Add execution phase as closure. Once input closure is called phase in considered finnished.
     public func addPhase(_ phase: @escaping ( @escaping () -> () ) -> ())  {
         phases.append(phase)
