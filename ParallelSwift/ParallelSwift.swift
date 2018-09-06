@@ -12,6 +12,11 @@ import Foundation
 
 public class ParallelSwift {
 
+    public enum ExecutionThread {
+        case main
+        case background
+    }
+
     public enum ExecutionType {
         /// Execution closure is executed after all phase closures are finnished.
         case all
@@ -27,18 +32,24 @@ public class ParallelSwift {
     /// Randomize the order which phases are put to operation queue
     public var sufflePhases: Bool = false
     
-    private var phases: [( @escaping () -> () ) -> ()] = []
+    private var phases: [(executionThread: ExecutionThread, phase:( @escaping () -> () ) -> ())] = []
     private let queue = OperationQueue()
-    private let dpQueue = DispatchQueue(label: "com.klubitii.parallelSwift", attributes: .concurrent)
+    private var dpQueue: DispatchQueue?
     private var executionType: ExecutionType = .all
     private var numberOfPhases: Int = 0
     private var complete: (() -> ())?
 
-    public init() {}
+    public init() {
+        dpQueue = DispatchQueue(label: "com.klubitii.parallelSwift.\(Date().timeIntervalSince1970)", attributes: .concurrent)
+    }
 
     /// Add execution phase as closure. Once input closure is called phase in considered finnished.
-    public func addPhase(_ phase: @escaping ( @escaping () -> () ) -> ())  {
-        phases.append(phase)
+    ///
+    /// With optional parameter.
+    /// - .main : phase is executed in main thread
+    /// - .background (default) : phase is excuted at background
+    public func addPhase(_ executionThread: ExecutionThread = .background,  phase: @escaping ( @escaping () -> () ) -> ()) {
+        phases.append((executionThread, phase))
     }
     
     /// Start all phases in parallel. ExecutionMode defines when completion is called (see documentation)
@@ -56,7 +67,13 @@ public class ParallelSwift {
         
         self.phases.forEach({ phase in
             queue.addOperation {
-                phase(self.done)
+                if phase.executionThread == .main {
+                    DispatchQueue.main.async {
+                        phase.phase(self.done)
+                    }
+                } else {
+                    phase.phase(self.done)
+                }
             }
         })
         if executionType == .none {
@@ -69,7 +86,7 @@ public class ParallelSwift {
         guard timeout > 0 else {
             return
         }
-        dpQueue.asyncAfter(deadline: DispatchTime.now() + timeout) {
+        dpQueue?.asyncAfter(deadline: DispatchTime.now() + timeout) {
             self.queue.cancelAllOperations()
             self.allDone()
         }

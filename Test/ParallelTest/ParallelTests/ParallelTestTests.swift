@@ -22,6 +22,7 @@ class ParallelTests: XCTestCase {
         // Put teardown code here. This method is called after the invocation of each test method in the class.
         super.tearDown()
         p = nil
+        result = ""
     }
     
     func doPhases() {
@@ -167,14 +168,14 @@ class ParallelTests: XCTestCase {
                 done()
             }
         }
-        p?.addPhase { done in
+        p?.addPhase(.main) { done in
             DispatchQueue.global().asyncAfter(deadline: DispatchTime.now() + 1.5){
                 print("*")
                 singleResult.append("*")
                 done()
             }
         }
-        p?.addPhase { done in
+        p?.addPhase(.main) { done in
             DispatchQueue.global().asyncAfter(deadline: DispatchTime.now() + 1.5){
                 print("-")
                 singleResult.append("-")
@@ -183,11 +184,41 @@ class ParallelTests: XCTestCase {
         }
 
         p?.execute(.all) {
-            XCTAssert(singleResult == "*-+")
-            e.fulfill()
-            print("all done")
+            self.checkResult(e, singleResult)
         }
         
+        waitForExpectations(timeout: 10, handler: { _ in
+            print("Test done")
+        })
+    }
+
+    private func checkResult(_ e: XCTestExpectation, _ singleResult: String) {
+        XCTAssert(singleResult == "*-+")
+        e.fulfill()
+        print("all done")
+    }
+
+    func testMainParallel() {
+
+        let e = expectation(description: "main")
+
+        p = ParallelSwift()
+
+        p?.timeout = 0
+
+        p?.addPhase(.main) { done in
+            XCTAssert(Thread.isMainThread)
+            done()
+        }
+        p?.addPhase { done in
+            XCTAssert(!Thread.isMainThread)
+            done()
+        }
+
+        p?.execute(.all) {
+            e.fulfill()
+        }
+
         waitForExpectations(timeout: 10, handler: { _ in
             print("Test done")
         })
