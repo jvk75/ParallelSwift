@@ -29,7 +29,7 @@ DESC
   s.source           = { :git => 'https://github.com/jvk75/ParallelSwift.git', :tag => s.version.to_s }
 
   s.ios.deployment_target = '9.0'
-  s.swift_version = '4.0'
+  s.swift_version = '4.2'
 
   s.source_files = 'ParallelSwift/*'
 end
