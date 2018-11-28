@@ -51,7 +51,18 @@ public class ParallelSwift {
     public func addPhase(_ executionThread: ExecutionThread = .background,  phase: @escaping ( @escaping () -> () ) -> ()) {
         phases.append((executionThread, phase))
     }
-    
+
+    /// Add execution phases as array (variadic function). Once the input closure of a phase is called phase in considered finnished.
+    ///
+    /// With optional thread parameter (all phases in the iput array are executed in the same way.
+    /// - .main : phase is executed in main thread
+    /// - .background (default) : phase is excuted at background
+    public func addPhases(_ executionThread: ExecutionThread = .background, phases: ( @escaping () -> () ) -> ()...) {
+        phases.forEach {
+            self.phases.append((executionThread, $0))
+        }
+    }
+
     /// Start all phases in parallel. ExecutionMode defines when completion is called (see documentation)
     public func execute(_ type: ExecutionType = .all,  complete: @escaping () -> ()) {
         self.numberOfPhases = phases.count

@@ -34,10 +34,11 @@ Execution closure is executed immediately after phases are started.
 
 ## Usage 
 
-Add methods to be executed as  closure with ```addPhases``` 
+Add methods to be executed as  closure with ```addPhase``` (one by one) or with ```addPhases``` (as array).
+Both methods take one parameter that defines where the phase/s are executed (.main or .background (default)) 
 Once excute is called all phases are launch simultaneusly (in parallel). 
 
-Methods will mark themself finnished a by calling  ```done``` .
+Methods will mark themself finnished a by calling input closure (e.g. ```done``` in the example) .
 
 Execution completion closure is always executed in main thread. See modes.
 
@@ -52,7 +53,7 @@ Execution completion closure is always executed in main thread. See modes.
        print("2")
        done()
     }
-    p.addPhase { done in
+    p.addPhase(.main) { done in
         print("3")
         done()
     }
@@ -60,6 +61,8 @@ Execution completion closure is always executed in main thread. See modes.
         print("all done")
     }
 ```
+
+See tests for more use cases.
 
 ### Parameters
 

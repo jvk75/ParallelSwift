@@ -51,7 +51,36 @@ class ParallelTests: XCTestCase {
             }
         }
     }
-    
+
+    func doPhasesVariadic() {
+        p = ParallelSwift()
+        result = ""
+        p?.timeout = 0
+        p?.addPhases(phases:
+            { done in
+                DispatchQueue.global().asyncAfter(deadline: DispatchTime.now() + 1){
+                    print("1")
+                    self.result.append("1")
+                    done()
+                }
+            },
+            { done in
+                DispatchQueue.global().asyncAfter(deadline: DispatchTime.now() + 2){
+                    print("2")
+                    self.result.append("2")
+                    done()
+                }
+            },
+            { done in
+                DispatchQueue.global().asyncAfter(deadline: DispatchTime.now() + 3){
+                    print("3")
+                    self.result.append("3")
+                    done()
+                }
+            }
+        )
+    }
+
     func testTimeoutAll() {
         
         let e = expectation(description: "time")
@@ -90,20 +119,37 @@ class ParallelTests: XCTestCase {
 
         let e = expectation(description: "all")
         doPhases()
-        
+
         p?.sufflePhases = true
-        
+
         p?.execute(.all) {
             XCTAssert(self.result == "123")
             e.fulfill()
             print("all done")
         }
-        
+
         waitForExpectations(timeout: 4, handler: { _ in
             print("Test done")
         })
     }
-    
+    func testModeAllVariadic() {
+
+        let e = expectation(description: "all")
+        doPhasesVariadic()
+
+        p?.sufflePhases = true
+
+        p?.execute(.all) {
+            XCTAssert(self.result == "123")
+            e.fulfill()
+            print("all done")
+        }
+
+        waitForExpectations(timeout: 4, handler: { _ in
+            print("Test done")
+        })
+    }
+
     func testModeAny() {
         
         let e = expectation(description: "any")
