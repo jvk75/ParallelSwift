@@ -269,5 +269,15 @@ class ParallelTests: XCTestCase {
             print("Test done")
         })
     }
-
+    
+    func testNoPhases() {
+        let e = expectation(description: "nophase")
+        p = ParallelSwift()
+        p?.execute {
+            e.fulfill()
+        }
+        waitForExpectations(timeout: 1, handler: { _ in
+            print("Test done")
+        })
+    }
 }
