@@ -8,7 +8,7 @@
 
 Pod::Spec.new do |s|
   s.name             = 'ParallelSwift'
-  s.version          = '1.3.0'
+  s.version          = '1.4.0'
   s.summary          = 'Execute multiple methods in parallel with simple API.'
   
 
@@ -29,7 +29,7 @@ DESC
   s.source           = { :git => 'https://github.com/jvk75/ParallelSwift.git', :tag => s.version.to_s }
 
   s.ios.deployment_target = '9.0'
-  s.swift_version = '4.2'
+  s.swift_version = '5'
 
   s.source_files = 'ParallelSwift/*'
 end

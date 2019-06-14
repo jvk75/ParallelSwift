@@ -69,7 +69,12 @@ public class ParallelSwift {
         self.complete = complete
         self.executionType = type
         
-        queue.maxConcurrentOperationCount = numberOfPhases + 1 
+        guard self.numberOfPhases > 0 else {
+            // exit if no phases are set
+            self.allDone()
+        }
+        
+        queue.maxConcurrentOperationCount = numberOfPhases + 1
         queue.underlyingQueue = dpQueue
         
         if sufflePhases {
