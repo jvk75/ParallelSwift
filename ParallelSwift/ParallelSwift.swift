@@ -72,6 +72,7 @@ public class ParallelSwift {
         guard self.numberOfPhases > 0 else {
             // exit if no phases are set
             self.allDone()
+            return
         }
         
         queue.maxConcurrentOperationCount = numberOfPhases + 1
