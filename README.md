@@ -5,14 +5,24 @@ Plus optional timeout to prevent locking app, and possibility to shuffle queue o
 Made purely in Swift. See Test folder for usege examples.
 
 ## Install
-UIImageCropper is available through [CocoaPods](http://cocoapods.org). To install
-it, simply add the following line to your Podfile:
+ParallelSwift is available through [CocoaPods](http://cocoapods.org). and via Swift Package Manager.
+
+### Cocoapods
+
+To install it, simply add the following line to your Podfile:
 
 ```
 pod 'ParallelSwift'
 ```
 
-(or add ParallelSwift folder to your project)
+### Swift Package Manager
+
+Add link to this repository in Xcode to projects Swift Packages. 
+```https://github.com/jvk75/ParallelSwift```
+
+### Manually
+
+Add Sources folder to your project
 
 
 ## Modes
